@@ -1,0 +1,59 @@
+import React, { useEffect, useState } from 'react';
+
+const API_BASE = process.env.REACT_APP_API_BASE || window.location.hostname.includes('github.dev')
+  ? `https://${window.location.hostname.replace('-3000.', '-8000.')}`
+  : 'http://localhost:8000';
+
+function Leaderboard() {
+  const [leaders, setLeaders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/leaderboard/`)
+      .then(res => res.json())
+      .then(data => {
+        setLeaders(data.results || data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div className="text-center my-4"><div className="spinner-border" role="status"><span className="visually-hidden">Loading...</span></div></div>;
+  if (error) return <div className="alert alert-danger my-4">Error: {error}</div>;
+
+  return (
+    <div className="card shadow mb-4">
+      <div className="card-header">
+        <h2 className="h4 mb-0">Leaderboard</h2>
+      </div>
+      <div className="card-body">
+        <div className="table-responsive">
+          <table className="table table-striped table-hover align-middle">
+            <thead className="table-dark">
+              <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">User</th>
+                <th scope="col">Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaders.map((l, i) => (
+                <tr key={l.id || i}>
+                  <th scope="row">{i + 1}</th>
+                  <td>{l.user}</td>
+                  <td>{l.score}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Leaderboard;
