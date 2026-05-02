@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from 'react';
 
-const API_BASE = process.env.REACT_APP_API_BASE || window.location.hostname.includes('github.dev')
-  ? `https://${window.location.hostname.replace('-3000.', '-8000.')}`
-  : 'http://localhost:8000';
+
+function getApiBase() {
+  let codespace = process.env.REACT_APP_CODESPACE_NAME;
+  if (!codespace) {
+    // Try to extract from window.location.hostname
+    const match = window.location.hostname.match(/^([^-]+)-8000\.app\.github\.dev$/);
+    if (match) {
+      codespace = match[1];
+    }
+  }
+  return codespace ? `https://${codespace}-8000.app.github.dev` : '';
+}
+
+const API_BASE = getApiBase();
 
 function Activities() {
   const [activities, setActivities] = useState([]);
@@ -10,10 +21,14 @@ function Activities() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/activities/`)
+    const endpoint = `${API_BASE}/api/activities/`;
+    console.log('Fetching Activities from:', endpoint);
+    fetch(endpoint)
       .then(res => res.json())
       .then(data => {
-        setActivities(data.results || data);
+        const results = data.results || data;
+        setActivities(results);
+        console.log('Fetched Activities:', results);
         setLoading(false);
       })
       .catch(err => {

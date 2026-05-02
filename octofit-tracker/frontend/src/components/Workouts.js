@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from 'react';
 
-const API_BASE = process.env.REACT_APP_API_BASE || window.location.hostname.includes('github.dev')
-  ? `https://${window.location.hostname.replace('-3000.', '-8000.')}`
-  : 'http://localhost:8000';
+
+function getApiBase() {
+  let codespace = process.env.REACT_APP_CODESPACE_NAME;
+  if (!codespace) {
+    const match = window.location.hostname.match(/^([^-]+)-8000\.app\.github\.dev$/);
+    if (match) {
+      codespace = match[1];
+    }
+  }
+  return codespace ? `https://${codespace}-8000.app.github.dev` : '';
+}
+
+const API_BASE = getApiBase();
 
 function Workouts() {
   const [workouts, setWorkouts] = useState([]);
@@ -10,10 +20,14 @@ function Workouts() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/workouts/`)
+    const endpoint = `${API_BASE}/api/workouts/`;
+    console.log('Fetching Workouts from:', endpoint);
+    fetch(endpoint)
       .then(res => res.json())
       .then(data => {
-        setWorkouts(data.results || data);
+        const results = data.results || data;
+        setWorkouts(results);
+        console.log('Fetched Workouts:', results);
         setLoading(false);
       })
       .catch(err => {
